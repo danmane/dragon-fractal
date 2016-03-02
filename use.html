@@ -5,8 +5,8 @@
 <body>
   <style>
     #main {
-      width: 585px;
-      height: 485px;
+      width: 1300px;
+      height: 700px;
       border: 1px solid blue;
       margin: 50px;
     }
@@ -18,34 +18,28 @@
     }
   </style>
   <svg id="main">
-    <g transform="translate(385, 385)">
-      <g id="o" transform="scale(1 1)"></g>
+    <g transform="translate(700, 385)">
+      <g id="o" transform="scale(1 1)">
+        <path id="0" d="M 0 0 L 1 0"/>
+      </g>
     </g>
   </svg>
   <script>
-  function reset() {
-    o = d3.select("#o"),x=9, y=0, id=-1, c=0.8, s=c, d=200, ds=1.2;
-    o.node().innerHTML = '<path id="0" d="M 0 0 L 1 0"/>';
-  }
-  reset()
+  o = d3.select("#o"),x=9, y=0, id=0, d=400, ds=1.1;
+  pd = "M 0 0 L " + x + " 0";
+  d3.select("path").transition().duration(d).attr("d", pd);
+  setTimeout(update, d);
   function update() {
-    if (id > 10) return;
-    if (id++ == -1) {
-      pd = "M 0 0 L " + x + " 0";
-      d3.select("path").transition().duration(d).attr("d", pd);
-      setTimeout(update, d);
-      return;
-    }
+    id++;
+    if (id > 12) return;
     g = o.append("g").attr("id", id)
     g.append("use").attr("xlink:href", "#" + (id-1));
     a = "rotate(0 " + [x,y] + ")", b = "rotate(90 " + [x,y] + ")";
     tween = function() {return d3.interpolateString(a,b)}
     g.append("use").attr("xlink:href", "#" + (id-1))
-      .transition().duration(d).attrTween("transform", tween);
-    _x = x+y, y = -x+y, x = _x, s*=c, d *= ds;
+    .transition().duration(d).attrTween("transform", tween);
+    _x = x+y, y = -x+y, x = _x, d = (d + 50) * ds;
     setTimeout(update, d);
   }
-  update();
-
   </script>
 </body>
