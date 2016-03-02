@@ -19,29 +19,29 @@
   </style>
   <svg id="main">
     <g id="origin" transform="translate(300, 300)">
-      <path id="0" d="M 0 0 L 10 0" />
     </g>
   </svg>
   <button id="update">Update</button>
   <button id="reset">Reset</button>
   <script>
-  var x = 10, y = 0, id = 0;
-  var origin = d3.select("#origin");
+  origin = d3.select("#origin");
+  function reset() {
+    x=50, y=0, id=0;
+    origin.node().innerHTML = '<path id="0" d="M 0 0 L ' + x + ' 0" />';
+  }
+  reset()
   function update() {
     var g = origin.append("g").attr("id", id+1)
     g.append("use").attr("xlink:href", "#" + id);
-    g.append("g").attr("transform", "rotate(90 " + x + " " + y + ")")
-      .append("use").attr("xlink:href", "#" + id);
-    id++;
-    var _x = x+y;
-    y = -x+y;
-    x = _x;
+    start = "rotate(0 " + [x,y] + ")", end = "rotate(90 " + [x,y] + ")";
+    rotate = g.append("g").attr("transform", start)
+    tween = function() {return d3.interpolateString(start,end)}
+    rotate.transition().duration(1200).attrTween("transform", tween);
+    console.log("transition from ", start, "to", end)
+    rotate.append("use").attr("xlink:href", "#" + id);
+    id++, _x = x+y, y = -x+y, x = _x;
   }
 
-  function reset() {
-    origin.node().innerHTML = '<path id="0" d="M 0 0 L 10 0" />';
-    x=10, y=0, id=0;
-  }
   document.getElementById("update").onclick = update
   document.getElementById("reset").onclick = reset
   </script>
