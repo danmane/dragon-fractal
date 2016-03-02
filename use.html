@@ -4,24 +4,12 @@
 </head>
 <body>
   <style>
-    #main {
-      width: 1300px;
-      height: 700px;
-      border: 1px solid blue;
-      margin: 50px;
-    }
-    path {
-      stroke: black;
-    }
-    body {
-      margin: 0;
-    }
+    #main {width: 1300px; height: 700px;}
+    path {stroke: black;}
   </style>
   <svg id="main">
-    <g transform="translate(700, 385)">
-      <g id="o" transform="scale(1 1)">
-        <path id="0" d="M 0 0 L 1 0"/>
-      </g>
+    <g id="o" transform="translate(700, 385)">
+      <path id="0" d="M 0 0 L 1 0"/>
     </g>
   </svg>
   <script>
@@ -30,16 +18,41 @@
   d3.select("path").transition().duration(d).attr("d", pd);
   setTimeout(update, d);
   function update() {
-    id++;
-    if (id > 12) return;
+    if (id++ > 11) return;
     g = o.append("g").attr("id", id)
     g.append("use").attr("xlink:href", "#" + (id-1));
-    a = "rotate(0 " + [x,y] + ")", b = "rotate(90 " + [x,y] + ")";
+    a = "rotateZ(0deg)", b = "rotateZ(90deg)";
     tween = function() {return d3.interpolateString(a,b)}
-    g.append("use").attr("xlink:href", "#" + (id-1))
-    .transition().duration(d).attrTween("transform", tween);
+    g.append("use").attr("xlink:href", "#" + (id-1)).style("transform-origin", x + "px " + y + "px" )
+      .transition().duration(d).styleTween("transform", tween);
     _x = x+y, y = -x+y, x = _x, d = (d + 50) * ds;
     setTimeout(update, d);
   }
+  </script>
+  <script>
+    // function rot(xo_yo) {
+    //   var xo=xo_yo[0];
+    //   var yo=xo_yo[1];
+    //   return function(x_y) {
+    //     var x=x_y[0];
+    //     var y=x_y[1];
+    //     var xd = x - xo;
+    //     var yd = y - yo;
+    //     var xr = -yd;
+    //     var yr = xd;
+    //     return [xr + xo, yr + yo];
+    //   };
+    // };
+    // function extendSeq(seq) {
+    //   var rotator = rot(seq[seq.length-1]);
+    //   return seq.map(rotator);
+    // }
+    // var seqs = [[[1,0]]];
+    // for (var i=0; i<10; i++) {
+    //   seqs.push(extendSeq())
+    // }
+    // var s0 = [[1,0]];
+    // var s1 = extendSeq(s0);
+    // var s2 = extendSeq(s1);
   </script>
 </body>
