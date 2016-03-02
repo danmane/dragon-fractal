@@ -1,0 +1,40 @@
+<head>
+  <meta charset="UTF-8">
+  <script src="bower_components/d3/d3.js"></script>
+</head>
+<body>
+  <style>
+    #main {
+      width: 600px;
+      height: 600px;
+      border: 1px solid blue;
+      margin: 50px;
+    }
+    path {
+      stroke: black;
+    }
+    body {
+      margin: 0;
+    }
+  </style>
+  <svg id="main">
+    <defs>
+      <path id="0" d="M 0 0 L 10 0" />
+      <g id="1">
+        <use xlink:href="#0" />
+        <g transform="rotate(90 10 0)">
+          <use xlink:href="#0"/>
+        </g>
+      </g>
+      <g id="2">
+        <use xlink:href="#1" />
+        <g transform="rotate(90 10 -10)">
+          <use xlink:href="#1" />
+        </g>
+      </g>
+    </defs>
+    <g transform="translate(300, 300)">
+      <use xlink:href="#2" />
+    </g>
+  </svg>
+</body>
