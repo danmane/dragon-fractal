@@ -18,23 +18,31 @@
     }
   </style>
   <svg id="main">
-    <defs>
+    <g id="origin" transform="translate(300, 300)">
       <path id="0" d="M 0 0 L 10 0" />
-      <g id="1">
-        <use xlink:href="#0" />
-        <g transform="rotate(90 10 0)">
-          <use xlink:href="#0"/>
-        </g>
-      </g>
-      <g id="2">
-        <use xlink:href="#1" />
-        <g transform="rotate(90 10 -10)">
-          <use xlink:href="#1" />
-        </g>
-      </g>
-    </defs>
-    <g transform="translate(300, 300)">
-      <use xlink:href="#2" />
     </g>
   </svg>
+  <button id="update">Update</button>
+  <button id="reset">Reset</button>
+  <script>
+  var x = 10, y = 0, id = 0;
+  var origin = d3.select("#origin");
+  function update() {
+    var g = origin.append("g").attr("id", id+1)
+    g.append("use").attr("xlink:href", "#" + id);
+    g.append("g").attr("transform", "rotate(90 " + x + " " + y + ")")
+      .append("use").attr("xlink:href", "#" + id);
+    id++;
+    var _x = x+y;
+    y = -x+y;
+    x = _x;
+  }
+
+  function reset() {
+    origin.node().innerHTML = '<path id="0" d="M 0 0 L 10 0" />';
+    x=10, y=0, id=0;
+  }
+  document.getElementById("update").onclick = update
+  document.getElementById("reset").onclick = reset
+  </script>
 </body>
