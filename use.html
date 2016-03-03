@@ -5,34 +5,41 @@
 <body>
   <style>
     #main {width: 1300px; height: 700px;}
-    path {stroke: inherit; stroke-width: 2px;}
+    path {stroke-width: 2px; stroke-linecap: square;}
   </style>
   <svg id="main">
-    <g id="origin" transform="translate(700, 385)">
-      <g id="o" >
-        <path id="0" d="M 0 0 L 1 0"/>
+    <filter id="colorMeHueRotate">
+      <feColorMatrix
+        type="hueRotate"
+        values="27" />
+        <feColorMatrix
+          type="saturate"
+          values="0.98" />
+    </filter>
+    <g id="xform" transform="translate(700, 385)">
+      <g id="origin">
+        <path d="M 0 0 L 1 0" style="stroke: red"/>
+        <circle cx="-5" cy="-5" r="1" fill="white"/>
       </g>
     </g>
   </svg>
   <script>
-  n = d3.select("#o"),x=10, y=0, id=0, d=100, ds=1.1, o=d3.select("#origin");
+  x=10, y=0, id=1, d=1000, ds=1.1, o=d3.select("#origin");
   cs = d3.scale.category10();
   pd = "M 0 0 L " + x + " 0";
   d3.select("path").transition().duration(d).attr("d", pd);
   setTimeout(update, d);
   function update() {
-    if (id++ > 11) return;
-    _n = n.node();
-    n = o.append("g").attr("id", id);
-    n.node().appendChild(_n)
-    g = n.append("g")
-    clone = _n.cloneNode(true)
-    g.node().appendChild(clone);
+    if (id++ > 12) return;
+    clone = o.node().cloneNode(true)
+    // Array.prototype.forEach.call(clone.children, function(x) {x.style=""})
+    g=d3.select(o.node().appendChild(clone))
     a = "rotate(0 " + [x,y] + ")", b = "rotate(90 " + [x,y] + ")"
-    tween = function() {return d3.interpolateString(a,b)}
-    g.transition().duration(d).attrTween("transform", tween);
+    w = function() {return d3.interpolateString(a,b)}
+    // g.style("stroke", cs(id-1))
+    g.attr("filter","url(#colorMeHueRotate)")
+    g.transition().duration(d).attrTween("transform", w)//.style("stroke",cs(id));
     _x = x+y, y = -x+y, x = _x, d = (d + 50) * ds;
-    g.style("stroke", cs(id));
     setTimeout(update, d);
   }
   </script>
