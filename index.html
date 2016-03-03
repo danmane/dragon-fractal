@@ -11,33 +11,48 @@
   </style>
   <svg id="main">
     <g id="xform" transform="translate(1000, 505)">
+      <circle r="5" fill="white" />
       <g id="origin">
         <g id="start"><path id="p" d="M 0 0 L 1 0"/></g>
       </g>
     </g>
   </svg>
   <script>
-  h=d3.hsl,cs = d3.scale.cubehelix().domain([0, 0.5, 1])
+  next = false
+  h=d3.hsl,cs = d3.scale.cubehelix().domain([-0.2, 0.5, 1])
     .range([h(-100, 0.75, 0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])
-  x=10, y=0, id=0, d=1000, ds=1.2, o=d3.select("#origin"), max=11;
+  x=10, y=0, id=0, d=100, ds=1.1, o=d3.select("#origin"), max=13;
   pd = "M 0 0 L " + x + " 0";
   d3.select("#p").style("stroke", cs(0)).transition().duration(d).attr("d", pd);
   setTimeout(update, d);
   function update() {
-    if (id++ > max+1) return;
-    last = o.node().children[o.node().children.length-1]
-    last.style = "stroke: " + cs((id-1) / max)
-    Array.prototype.forEach.call(last.children, function(x) {x.style=""})
-    clone = o.node().cloneNode(true)
-    g=d3.select(o.node().appendChild(clone))
-    g.selectAll("g").transition().duration(d).style("stroke", cs(id/max))
+    id = (id + 1) % (max * 2);
+    console.log(id);
     a = "rotate(0 " + [x,y] + ")", b = "rotate(90 " + [x,y] + ")"
     w = function() {return d3.interpolateString(a,b)}
-    // debugger;
-    // g.style("stroke", cs(id-1))
-    g.transition().duration(d).attrTween("transform", w)
-    _x = x+y, y = -x+y, x = _x, d = (d + 50) * ds;
-    setTimeout(update, d);
+    last = o.node().children[o.node().children.length-1]
+    if (id < max) {
+      last.style = "stroke: " + cs((id-1) / max)
+      Array.prototype.forEach.call(last.children, function(x) {x.style=""})
+      clone = o.node().cloneNode(true)
+      g=d3.select(o.node().appendChild(clone))
+      g.selectAll("g").transition().duration(d).style("stroke", cs(id/max))
+      g.transition().duration(d).attrTween("transform", w)
+      _x = x+y, y = -x+y, x = _x, d = (d) * ds;
+      setTimeout(update, d);
+    } else {
+      if (next) next.remove()
+      y = (y+x)/2, x -= y
+      a = "rotate(0 " + [x,y] + ")", b = "rotate(90 " + [x,y] + ")"
+      w = function() {return d3.interpolateString(a,b)}
+      children = o.node().children, next = children[children.length-1]
+      o = o.append("g")
+      while (children.length > 2) {
+        o.node().appendChild(children[0])
+      }
+      o.transition().duration(d).attrTween("transform", w)
+      setTimeout(update, d);
+    }
   }
   </script>
 </body>
