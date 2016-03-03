@@ -8,18 +8,10 @@
     path {stroke-width: 2px; stroke-linecap: square;}
   </style>
   <svg id="main">
-    <filter id="colorMeHueRotate">
-      <feColorMatrix
-        type="hueRotate"
-        values="27" />
-        <feColorMatrix
-          type="saturate"
-          values="0.98" />
-    </filter>
     <g id="xform" transform="translate(700, 385)">
       <g id="origin">
-        <path d="M 0 0 L 1 0" style="stroke: red"/>
-        <circle cx="-5" cy="-5" r="1" fill="white"/>
+        <path d="M 0 0 L 1 0" style="stroke: black"/>
+        <!-- <circle cx="0" cy="10" r="1" fill="white"/> -->
       </g>
     </g>
   </svg>
@@ -32,13 +24,12 @@
   function update() {
     if (id++ > 12) return;
     clone = o.node().cloneNode(true)
-    // Array.prototype.forEach.call(clone.children, function(x) {x.style=""})
+    Array.prototype.forEach.call(clone.children, function(x) {x.style=""})
     g=d3.select(o.node().appendChild(clone))
     a = "rotate(0 " + [x,y] + ")", b = "rotate(90 " + [x,y] + ")"
     w = function() {return d3.interpolateString(a,b)}
-    // g.style("stroke", cs(id-1))
-    g.attr("filter","url(#colorMeHueRotate)")
-    g.transition().duration(d).attrTween("transform", w)//.style("stroke",cs(id));
+    g.style("stroke", cs(id-1))
+    g.transition().duration(d).attrTween("transform", w).style("stroke",cs(id));
     _x = x+y, y = -x+y, x = _x, d = (d + 50) * ds;
     setTimeout(update, d);
   }
