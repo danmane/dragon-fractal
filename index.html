@@ -24,7 +24,7 @@
   r =d3.select("svg").node().getBoundingClientRect();
   outerWidth= r.width
   outerHeight = r.height;
-  id=0, TRANSITION_DURATION=3000, ds=1.1, o=d3.select("#start"), NUM_STEPS=15;
+  id=0, TRANSITION_DURATION=3000, ds=1.1, o=d3.select("#start"), NUM_STEPS=7;
   STARTING_RATIO = 4;
   next = false
   len = 10
@@ -95,6 +95,24 @@
     }
     return b
   }
+
+
+  var x = 10;
+  var y = 0;
+  var segments = [[[0,0], [x,y]]]
+  var total = segments[0]
+
+  function extend() {
+    function r(x) {
+      return rotate(x, total[total.length-1])
+    }
+    newS = total.map(r).reverse()
+    segments.push(newS)
+    total = total.concat(newS.slice(1))
+  }
+
+
+
   rotatePt = [x,y]
   // box = rotateBox(box, rotatePt)
   // drawBox(box)
