@@ -6,7 +6,7 @@
 <body>
   <style>
     #main {width: 100%; height: 100% ; background-color: black;}
-    path {stroke-width: 2px; stroke-linecap: round;}
+    path {stroke-width: 2px; stroke-linecap: round; fill: none;}
     body {margin: 0px;}
   </style>
   <svg id="main">
@@ -24,11 +24,11 @@
   r =d3.select("svg").node().getBoundingClientRect();
   outerWidth= r.width
   outerHeight = r.height;
-  id=0, TRANSITION_DURATION=3000, ds=1.1, o=d3.select("#start"), NUM_STEPS=7;
+  id=0, TRANSITION_DURATION=1000, ds=1.1, o=d3.select("#start"), NUM_STEPS=14;
   STARTING_RATIO = 4;
   next = false
   len = 10
-  x=0, y=10
+  x=10, y=10
   var box = {
     minx: 0,
     maxx: x,
@@ -97,8 +97,6 @@
   }
 
 
-  var x = 10;
-  var y = 0;
   var segments = [[[0,0], [x,y]]]
   var total = segments[0]
 
@@ -116,16 +114,26 @@
   rotatePt = [x,y]
   // box = rotateBox(box, rotatePt)
   // drawBox(box)
-  h=d3.hsl,cs = d3.scale.cubehelix().domain([-0.2, 0.5, 1])
+  h=d3.hsl,cs_ = d3.scale.cubehelix().domain([-0.2, 0.5, 1])
     .range([h(-100, 0.75, 0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])
   d = ["M 0 0 L",x,y].join(" ")
+  function cs(x) {return cs_(x/NUM_STEPS)}
   // p=d3.select("path").attr("d",d),
 
   d3.select("path").style("stroke", cs(0)).transition().duration(TRANSITION_DURATION).attr("d", d);
   setTimeout(update, TRANSITION_DURATION);
+  clone = null;
   function update() {
     id++// = (id + 1) % (NUM_STEPS * 2);
     if (id < NUM_STEPS) {
+      if (clone) {
+        extend();
+        pathd = d3.svg.line()(segments[segments.length-1])
+        clone.remove()
+        o.append("path").attr("d", pathd).style("stroke", cs(id-1))
+        debugger;
+
+      }
       drawBox(id)
       a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
       rotator.attr("cx", rotatePt[0]).attr("cy", rotatePt[1])
@@ -134,13 +142,13 @@
       box=rotateBox(box, rotatePt)
       // drawBox(box)
       rotatePt = rotate([0,0], rotatePt)
-      last.style = "stroke: " + cs((id-1) / NUM_STEPS)
+      last.style = "stroke: " + cs((id-1))
       Array.prototype.forEach.call(last.children, function(x) {x.style=""})
       clone = o.node().cloneNode(true)
       g=d3.select(o.node().appendChild(clone))
       allChildren = g.selectAll("g");//d3.selectAll(g.node().children)
       debugger;
-      allChildren.transition().duration(TRANSITION_DURATION).style("stroke", cs(id/NUM_STEPS))
+      allChildren.transition().duration(TRANSITION_DURATION).style("stroke", cs(id))
       g.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
       setTimeout(update, TRANSITION_DURATION);
     } else {
