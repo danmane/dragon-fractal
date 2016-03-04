@@ -5,66 +5,137 @@
 </head>
 <body>
   <style>
-    #main {width: 100%; height: 100%; background-color: black;}
-    path {stroke-width: 2px; stroke-linecap: square;}
+    #main {width: 100%; height: 100% ; background-color: black;}
+    path {stroke-width: 2px; stroke-linecap: round;}
     body {margin: 0px;}
   </style>
   <svg id="main">
-      <circle r="5" fill="white" />
+    <g id="rescale" transform="scale(0,0) translate(0,0)">
+      <circle id="rotator" r="3" fill="white" style="display:none;"/>
+      <rect id="box" x="0" y="0" width="10" height="0" fill="grey" />
+      <rect id="margin" x="0" y="0" width="10" height="0" fill="aliceblue" />
       <g id="origin">
-        <g id="start"><path d="M 500 500 L 510 500"/></g>
+        <g id="start"><path d="M 0 0 L 1 0"/></g>
       </g>
+    </g>
   </svg>
   <script>
+  rotator = d3.select("#rotator")
+  r =d3.select("svg").node().getBoundingClientRect();
+  outerWidth= r.width
+  outerHeight = r.height;
+  id=0, TRANSITION_DURATION=3000, ds=1.1, o=d3.select("#origin"), NUM_STEPS=13;
+  STARTING_RATIO = 4;
   next = false
   len = 10
-  ox = 700, oy = 500, x = ox+len, y =oy
+  x=10, y=0
+  var box = {
+    minx: 0,
+    maxx: x,
+    miny: 0,
+    maxy: 0,
+  }
+  function futureBox(iters) {
+    b = {
+      minx: 0,
+      maxx: x,
+      miny: 0,
+      maxy: 0,
+    }
+    _about = [x,0]
+    for (var i=0; i<iters; i++) {
+      b = rotateBox(b, _about)
+      _about = rotate([0,0], _about)
+    }
+    return b;
+  }
+
+  function drawBox(iters, initial) {
+    var b = futureBox(iters)
+    var innerWidth = (b.maxx - b.minx)
+    var innerHeight = (b.maxy - b.miny)
+    var margin_realpix = 50
+    var ratio = Math.min(outerWidth/(innerWidth+2*margin_realpix), outerHeight/(innerHeight+2*margin_realpix), STARTING_RATIO);
+    var margin_fakepix = margin_realpix / ratio
+    var xt = (outerWidth - innerWidth * ratio)/(2*ratio)
+    var yt = (outerHeight - innerHeight * ratio)/(2*ratio)
+    s = d3.select("#rescale")
+    if (ratio === STARTING_RATIO && !initial) return
+    xform = "scale("+[ratio,ratio]+") translate(" + [-b.minx+xt,-b.miny+yt] + ")"
+    if (iters > 0) s = s.transition().ease(d3.ease("cubic-in-out", 3)).duration(TRANSITION_DURATION)
+    s.attr("transform", xform)
+    // d3.select("#box").attr({
+    //   width: b.maxx-b.minx,
+    //   height: b.maxy-b.miny,
+    //   x: b.minx,
+    //   y: b.miny
+    // })
+    // debugger;
+    console.log("DRAW", ratio)
+    // d3.select("#box").attr({x: b.minx, y: b.miny, height: b.maxy-b.miny, width: b.maxx-b.minx})
+  }
+
+  drawBox(0, true)
+  // drawBox(NUM_STEPS-1)
+
+
+  function rotate(vec, about){
+    var x = vec[0]-about[0]
+    var y = vec[1]-about[1]
+    return [about[0] - y, about[1] + x]
+  }
+
+  function rotateBox(box, about) {
+    var c1 = rotate([box.minx, box.miny], about)
+    var c2 = rotate([box.maxx, box.maxy], about)
+    var b = {
+      minx: Math.min(c1[0], c2[0], box.minx),
+      maxx: Math.max(c1[0], c2[0], box.maxx),
+      miny: Math.min(c1[1], c2[1], box.miny),
+      maxy: Math.max(c1[1], c2[1], box.maxy)
+    }
+    console.log("RATIO", (b.maxy - b.miny) / (b.maxx - b.minx))
+    return b
+  }
+  rotatePt = [x,y]
+  // box = rotateBox(box, rotatePt)
+  // drawBox(box)
   h=d3.hsl,cs = d3.scale.cubehelix().domain([-0.2, 0.5, 1])
     .range([h(-100, 0.75, 0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])
-  d = ["M",ox,oy,"L",x,y].join(" ")
-  p=d3.select("path").attr("d",d), r=p.node().getBoundingClientRect()
+  d = ["M 0 0 L",x,y].join(" ")
+  // p=d3.select("path").attr("d",d),
 
-  id=0, d=150, ds=1.1, o=d3.select("#origin"), max=13;
-  circle = d3.select("circle")
-  d3.select("#p").style("stroke", cs(0))//.transition().duration(d).attr("d", pd);
-  setTimeout(update, d);
+  d3.select("path").style("stroke", cs(0)).transition().duration(TRANSITION_DURATION).attr("d", d);
+  setTimeout(update, TRANSITION_DURATION);
   function update() {
-    id = (id + 1) % (max * 2);
-    a = "rotate(0 " + [x,y] + ")", b = "rotate(90 " + [x,y] + ")"
-    circle.attr("cx", x).attr("cy", y)
-    w = function() {return d3.interpolateString(a,b)}
-    if (id == 0) {
-      ox = 700, oy = 500, x = ox+len, y =oy
-    } else if (id < max-1) {
-      _x = x+y-oy, y = ox-x+y, x = _x, d = (d) * ds;
-    } else if (id > max-1) {
-      y = (y+x)/2, x = x-y+oy
-    }
-    // if (id == 0) {
-    //   debugger;
-    // }
-    console.log(id);
-    last = o.node().children[o.node().children.length-1]
-    if (id < max) {
-      last.style = "stroke: " + cs((id-1) / max)
+    id++// = (id + 1) % (NUM_STEPS * 2);
+    if (id < NUM_STEPS) {
+      drawBox(id)
+      a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
+      rotator.attr("cx", rotatePt[0]).attr("cy", rotatePt[1])
+      w = function() {return d3.interpolateString(a,b)}
+      last = o.node().children[o.node().children.length-1]
+      box=rotateBox(box, rotatePt)
+      // drawBox(box)
+      rotatePt = rotate([0,0], rotatePt)
+      last.style = "stroke: " + cs((id-1) / NUM_STEPS)
       Array.prototype.forEach.call(last.children, function(x) {x.style=""})
       clone = o.node().cloneNode(true)
       g=d3.select(o.node().appendChild(clone))
-      g.selectAll("g").transition().duration(d).style("stroke", cs(id/max))
-      g.transition().duration(d).attrTween("transform", w)
-      console.log(x,y)
-      setTimeout(update, d);
+      g.selectAll("g").transition().duration(TRANSITION_DURATION).style("stroke", cs(id/NUM_STEPS))
+      g.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
+      setTimeout(update, TRANSITION_DURATION);
     } else {
-      if (next) {next.remove()} else {d*=15}
-      children = o.node().children, next = children[children.length-1]
-      reattach = o.node()
-      o = o.append("g")
-      while (children.length > 2) {
-        o.node().appendChild(children[0])
-      }
-      reattach.appendChild(circle.node())
-      o.transition().duration(d).attrTween("transform", w)
-      setTimeout(update, d);
+      // if (next) {next.remove()} else {d*=15}
+      // children = o.node().children, next = children[children.length-1]
+      // reattach = o.node()
+      // o = o.append("g")
+      // while (children.length > 2) {
+      //   o.node().appendChild(children[0])
+      // }
+      // reattach.appendChild(rotator.node())
+      // o.transition().duration(d).attrTween("transform", w)
+      // setTimeout(update, d);
     }
   }
   </script>
