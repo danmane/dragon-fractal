@@ -15,7 +15,7 @@
       <rect id="box" x="0" y="0" width="10" height="0" fill="grey" />
       <rect id="margin" x="0" y="0" width="10" height="0" fill="aliceblue" />
       <g id="origin">
-        <g id="start"><path d="M 0 0 L 1 0"/></g>
+        <g id="start"><path d="M 0 0 L 0 0"/></g>
       </g>
     </g>
   </svg>
@@ -24,25 +24,25 @@
   r =d3.select("svg").node().getBoundingClientRect();
   outerWidth= r.width
   outerHeight = r.height;
-  id=0, TRANSITION_DURATION=3000, ds=1.1, o=d3.select("#origin"), NUM_STEPS=13;
+  id=0, TRANSITION_DURATION=3000, ds=1.1, o=d3.select("#start"), NUM_STEPS=15;
   STARTING_RATIO = 4;
   next = false
   len = 10
-  x=10, y=0
+  x=0, y=10
   var box = {
     minx: 0,
     maxx: x,
     miny: 0,
-    maxy: 0,
+    maxy: y,
   }
   function futureBox(iters) {
     b = {
       minx: 0,
       maxx: x,
       miny: 0,
-      maxy: 0,
+      maxy: y,
     }
-    _about = [x,0]
+    _about = [x,y]
     for (var i=0; i<iters; i++) {
       b = rotateBox(b, _about)
       _about = rotate([0,0], _about)
@@ -71,7 +71,6 @@
     //   y: b.miny
     // })
     // debugger;
-    console.log("DRAW", ratio)
     // d3.select("#box").attr({x: b.minx, y: b.miny, height: b.maxy-b.miny, width: b.maxx-b.minx})
   }
 
@@ -94,7 +93,6 @@
       miny: Math.min(c1[1], c2[1], box.miny),
       maxy: Math.max(c1[1], c2[1], box.maxy)
     }
-    console.log("RATIO", (b.maxy - b.miny) / (b.maxx - b.minx))
     return b
   }
   rotatePt = [x,y]
@@ -122,7 +120,9 @@
       Array.prototype.forEach.call(last.children, function(x) {x.style=""})
       clone = o.node().cloneNode(true)
       g=d3.select(o.node().appendChild(clone))
-      g.selectAll("g").transition().duration(TRANSITION_DURATION).style("stroke", cs(id/NUM_STEPS))
+      allChildren = g.selectAll("g");//d3.selectAll(g.node().children)
+      debugger;
+      allChildren.transition().duration(TRANSITION_DURATION).style("stroke", cs(id/NUM_STEPS))
       g.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
       setTimeout(update, TRANSITION_DURATION);
     } else {
