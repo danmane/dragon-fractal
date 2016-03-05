@@ -10,16 +10,12 @@
   </style>
   <svg></svg>
   <script>
-  r =d3.select("svg").node().getBoundingClientRect();
-  outerWidth= r.width
-  outerHeight = r.height;
-  step=0, TRANSITION_DURATION=1000, ds=1.1, NUM_STEPS=14;
+  r=d3.select("svg").node().getBoundingClientRect()
+  outerWidth=r.width, outerHeight = r.height;
+  step=0, TRANSITION_DURATION=100, ds=1.1, NUM_STEPS=14;
   STARTING_RATIO = 4;
-  next = false
-  len = 10
-  x=00, y=10
+  x=0, y=10
   s = d3.select("svg").append("g")
-  o = s.append("g")
 
   function computeTransform(seq) {
     var xs=seq.map(function(x){return x[0]}),ys=seq.map(function(x){return x[1]})
@@ -57,19 +53,17 @@
   h=d3.hsl,cs_ = d3.scale.cubehelix().domain([-0.2, 0.5, 1]).range([h(-100, 0.75, 0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])
   function cs(x) {return cs_(x/NUM_STEPS)}
 
-  d = d3.svg.line()(totals[0])
-  o.append("path").attr("d", "M0,0 L0,0").style("stroke", cs(0)).transition().duration(TRANSITION_DURATION).attr("d", d);
   s.attr("transform", computeTransform(totals[0]))
+  s.append("path").attr("d", "M0,0 L0,0").style("stroke", cs(0)).transition().duration(TRANSITION_DURATION).attr("d", d3.svg.line()(totals[0]));
   setTimeout(unfold1, TRANSITION_DURATION);
-  clone = null;
 
   function unfold1() {
     step++
     rotatePt = last(totals[step-1])
     a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
     w = function() {return d3.interpolateString(a,b)}
-    clone = o.node().cloneNode(true)
-    g=d3.select(o.node().appendChild(clone))
+    clone = s.node().cloneNode(true)
+    g=d3.select(s.node().appendChild(clone))
     g.selectAll("path").transition().duration(TRANSITION_DURATION).style("stroke", cs(step))
     g.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
     s.transition().duration(TRANSITION_DURATION).attr("transform", computeTransform(totals[step]))
@@ -89,7 +83,7 @@
   function unfold2() {
     pathd = d3.svg.line()(segments[step])
     clone.remove()
-    o.append("path").attr("d", pathd).style("stroke", cs(step))
+    s.append("path").attr("d", pathd).style("stroke", cs(step))
     if (step < NUM_STEPS) {
       unfold1()
     }
