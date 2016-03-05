@@ -1,32 +1,27 @@
 <head>
-  <meta charset="UTF-8">
-  <script src="bower_components/d3/d3.js"></script>
+  <script src="bower_components/d3/d3.min.js"></script>
   <script>!function(){function t(t){return function(e,i){e=d3.hsl(e),i=d3.hsl(i);var r=(e.h+120)*a,h=(i.h+120)*a-r,s=e.s,l=i.s-s,o=e.l,u=i.l-o;return isNaN(l)&&(l=0,s=isNaN(s)?i.s:s),isNaN(h)&&(h=0,r=isNaN(r)?i.h:r),function(a){var e=r+h*a,i=Math.pow(o+u*a,t),c=(s+l*a)*i*(1-i);return"#"+n(i+c*(-.14861*Math.cos(e)+1.78277*Math.sin(e)))+n(i+c*(-.29227*Math.cos(e)-.90649*Math.sin(e)))+n(i+c*1.97294*Math.cos(e))}}}function n(t){var n=(t=0>=t?0:t>=1?255:0|255*t).toString(16);return 16>t?"0"+n:n}var a=Math.PI/180;d3.scale.cubehelix=function(){return d3.scale.linear().range([d3.hsl(300,.5,0),d3.hsl(-240,.5,1)]).interpolate(d3.interpolateCubehelix)},d3.interpolateCubehelix=t(1),d3.interpolateCubehelix.gamma=t}();</script>
 </head>
 <body>
   <style>
-    #main {width: 100%; height: 100% ; background-color: black;}
+    svg {width: 100%; height: 100% ; background-color: black;}
     path {stroke-width: 1.5px; stroke-linecap: round; fill: none;}
     body {margin: 0px;}
   </style>
-  <svg id="main">
-    <g id="rescale" transform="scale(0,0) translate(0,0)">
-      <g id="start">
-      </g>
-    </g>
-  </svg>
+  <svg></svg>
   <script>
-  rotator = d3.select("#rotator")
   r =d3.select("svg").node().getBoundingClientRect();
   outerWidth= r.width
   outerHeight = r.height;
-  step=0, TRANSITION_DURATION=1000, ds=1.1, o=d3.select("#start"), NUM_STEPS=14;
+  step=0, TRANSITION_DURATION=1000, ds=1.1, NUM_STEPS=14;
   STARTING_RATIO = 4;
   next = false
   len = 10
   x=00, y=10
+  s = d3.select("svg").append("g")
+  o = s.append("g")
 
-  function drawBox(seq) {
+  function computeTransform(seq) {
     var xs=seq.map(function(x){return x[0]}),ys=seq.map(function(x){return x[1]})
     var minx = d3.min(xs), maxx = d3.max(xs), miny = d3.min(ys), maxy = d3.max(ys)
     var innerWidth = (maxx - minx)
@@ -36,10 +31,8 @@
     var margin_fakepix = margin_realpix / ratio
     var xt = (outerWidth - innerWidth * ratio)/(2*ratio)
     var yt = (outerHeight - innerHeight * ratio)/(2*ratio)
-    s = d3.select("#rescale")
     xform = "scale("+[ratio,ratio]+") translate(" + [-minx+xt,-miny+yt] + ")"
-    s = s.transition().ease(d3.ease("cubic-in-out", 3)).duration(TRANSITION_DURATION)
-    s.attr("transform", xform)
+    return xform
   }
 
   function rotate(vec, about){
@@ -65,13 +58,13 @@
   function cs(x) {return cs_(x/NUM_STEPS)}
 
   d = d3.svg.line()(totals[0])
-  o.append("path").attr("d", "M0,0").style("stroke", cs(0)).transition().duration(TRANSITION_DURATION).attr("d", d);
+  o.append("path").attr("d", "M0,0 L0,0").style("stroke", cs(0)).transition().duration(TRANSITION_DURATION).attr("d", d);
+  s.attr("transform", computeTransform(totals[0]))
   setTimeout(unfold1, TRANSITION_DURATION);
   clone = null;
 
   function unfold1() {
     step++
-    drawBox(totals[step])
     rotatePt = last(totals[step-1])
     a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
     w = function() {return d3.interpolateString(a,b)}
@@ -79,6 +72,7 @@
     g=d3.select(o.node().appendChild(clone))
     g.selectAll("path").transition().duration(TRANSITION_DURATION).style("stroke", cs(step))
     g.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
+    s.transition().duration(TRANSITION_DURATION).attr("transform", computeTransform(totals[step]))
     setTimeout(unfold2, TRANSITION_DURATION);
       // if (next) {next.remove()} else {d*=15}
       // children = o.node().children, next = children[children.length-1]
