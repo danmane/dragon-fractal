@@ -24,7 +24,7 @@
   r =d3.select("svg").node().getBoundingClientRect();
   outerWidth= r.width
   outerHeight = r.height;
-  id=0, TRANSITION_DURATION=1000, ds=1.1, o=d3.select("#start"), NUM_STEPS=14;
+  id=0, TRANSITION_DURATION=1000, ds=1.1, o=d3.select("#start"), NUM_STEPS=15;
   STARTING_RATIO = 4;
   next = false
   len = 10
@@ -50,19 +50,20 @@
     return b;
   }
 
-  function drawBox(iters, initial) {
-    var b = futureBox(iters)
-    var innerWidth = (b.maxx - b.minx)
-    var innerHeight = (b.maxy - b.miny)
+  function drawBox(seq) {
+    var xs=seq.map(function(x){return x[0]}),ys=seq.map(function(x){return x[1]})
+    var minx = d3.min(xs), maxx = d3.max(xs), miny = d3.min(ys), maxy = d3.max(ys)
+    var innerWidth = (maxx - minx)
+    var innerHeight = (maxy - miny)
     var margin_realpix = 50
     var ratio = Math.min(outerWidth/(innerWidth+2*margin_realpix), outerHeight/(innerHeight+2*margin_realpix), STARTING_RATIO);
     var margin_fakepix = margin_realpix / ratio
     var xt = (outerWidth - innerWidth * ratio)/(2*ratio)
     var yt = (outerHeight - innerHeight * ratio)/(2*ratio)
     s = d3.select("#rescale")
-    if (ratio === STARTING_RATIO && !initial) return
-    xform = "scale("+[ratio,ratio]+") translate(" + [-b.minx+xt,-b.miny+yt] + ")"
-    if (iters > 0) s = s.transition().ease(d3.ease("cubic-in-out", 3)).duration(TRANSITION_DURATION)
+    // if (ratio === STARTING_RATIO) return
+    xform = "scale("+[ratio,ratio]+") translate(" + [-minx+xt,-miny+yt] + ")"
+    s = s.transition().ease(d3.ease("cubic-in-out", 3)).duration(TRANSITION_DURATION)
     s.attr("transform", xform)
     // d3.select("#box").attr({
     //   width: b.maxx-b.minx,
@@ -73,10 +74,6 @@
     // debugger;
     // d3.select("#box").attr({x: b.minx, y: b.miny, height: b.maxy-b.miny, width: b.maxx-b.minx})
   }
-
-  drawBox(0, true)
-  // drawBox(NUM_STEPS-1)
-
 
   function rotate(vec, about){
     var x = vec[0]-about[0]
@@ -134,7 +131,7 @@
         debugger;
 
       }
-      drawBox(id)
+      drawBox(total)
       a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
       rotator.attr("cx", rotatePt[0]).attr("cy", rotatePt[1])
       w = function() {return d3.interpolateString(a,b)}
@@ -146,8 +143,7 @@
       Array.prototype.forEach.call(last.children, function(x) {x.style=""})
       clone = o.node().cloneNode(true)
       g=d3.select(o.node().appendChild(clone))
-      allChildren = g.selectAll("g");//d3.selectAll(g.node().children)
-      debugger;
+      allChildren = g.selectAll("path");//d3.selectAll(g.node().children)
       allChildren.transition().duration(TRANSITION_DURATION).style("stroke", cs(id))
       g.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
       setTimeout(update, TRANSITION_DURATION);
