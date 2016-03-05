@@ -29,26 +29,6 @@
   next = false
   len = 10
   x=10, y=10
-  var box = {
-    minx: 0,
-    maxx: x,
-    miny: 0,
-    maxy: y,
-  }
-  function futureBox(iters) {
-    b = {
-      minx: 0,
-      maxx: x,
-      miny: 0,
-      maxy: y,
-    }
-    _about = [x,y]
-    for (var i=0; i<iters; i++) {
-      b = rotateBox(b, _about)
-      _about = rotate([0,0], _about)
-    }
-    return b;
-  }
 
   function drawBox(seq) {
     var xs=seq.map(function(x){return x[0]}),ys=seq.map(function(x){return x[1]})
@@ -81,18 +61,6 @@
     return [about[0] - y, about[1] + x]
   }
 
-  function rotateBox(box, about) {
-    var c1 = rotate([box.minx, box.miny], about)
-    var c2 = rotate([box.maxx, box.maxy], about)
-    var b = {
-      minx: Math.min(c1[0], c2[0], box.minx),
-      maxx: Math.max(c1[0], c2[0], box.maxx),
-      miny: Math.min(c1[1], c2[1], box.miny),
-      maxy: Math.max(c1[1], c2[1], box.maxy)
-    }
-    return b
-  }
-
 
   var segments = [[[0,0], [x,y]]]
   var total = segments[0]
@@ -109,8 +77,6 @@
 
 
   rotatePt = [x,y]
-  // box = rotateBox(box, rotatePt)
-  // drawBox(box)
   h=d3.hsl,cs_ = d3.scale.cubehelix().domain([-0.2, 0.5, 1])
     .range([h(-100, 0.75, 0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])
   d = ["M 0 0 L",x,y].join(" ")
@@ -136,8 +102,6 @@
       rotator.attr("cx", rotatePt[0]).attr("cy", rotatePt[1])
       w = function() {return d3.interpolateString(a,b)}
       last = o.node().children[o.node().children.length-1]
-      box=rotateBox(box, rotatePt)
-      // drawBox(box)
       rotatePt = rotate([0,0], rotatePt)
       last.style = "stroke: " + cs((id-1))
       Array.prototype.forEach.call(last.children, function(x) {x.style=""})
