@@ -6,15 +6,14 @@
   <style>
     svg {width: 100%; height: 100% ; background-color: black;}
     path {stroke-width: 1.5px; stroke-linecap: round; fill: none;}
-    body {margin: 0px;}
+    body {margin: 0px; cursor: none;}
   </style>
 
   <svg></svg>
   <script>
-  TD=500, TS=1.15, NUM_STEPS=2;
+  TD=3000, TS=1.15, NUM_STEPS=14, STAGE_MARGIN = 1.3;
   STARTING_RATIO = 4;
   s=null
-
   function computeTransform(seq) {
     r=d3.select("svg").node().getBoundingClientRect()
     outerWidth=r.width, outerHeight = r.height;
@@ -45,16 +44,20 @@
 
 
 
-  function setup(xy) {
+  function setup(xy, start) {
     step = 0
     if (s) s.remove()
     s = d3.select("svg").append("g")
     segments = [[[0,0], xy]]
     totals = segments.slice()
-    s.attr("transform", computeTransform([[0,0]]))
+    s.attr("transform", computeTransform(segments[0]))
     p = s.append("path").style("stroke", cs(0)).attr("d", "M0,0 L0,0")
-    p.transition().duration(TD).attr("d", d3.svg.line()(totals[0]))
-    setTimeout(unfold1, TD);
+    function cont() {
+      p = start ? p.transition().duration(TD) : p;
+      p.attr("d", d3.svg.line()(totals[0]))
+      setTimeout(unfold1, TD*STAGE_MARGIN);
+    }
+    start ? d3.select("svg").node().onclick=cont : cont()
   }
 
 
@@ -67,7 +70,7 @@
   }
 
   h=d3.hsl,cs_ = d3.scale.cubehelix().domain([-0.2, 0.5, 1]).range([h(-100, 0.75, 0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])
-  function cs(x) {return cs_(x/NUM_STEPS)}
+  function cs(x) {return cs_(x/(NUM_STEPS+1))}
 
 
   function unfold1() {
@@ -82,7 +85,7 @@
     g.selectAll("path").transition().duration(TD).style("stroke", cs(step))
     g.transition().duration(TD).attrTween("transform", w)
     effectZoom(totals[step])
-    setTimeout(unfold2, TD);
+    setTimeout(unfold2, TD*STAGE_MARGIN);
   }
 
   function unfold2() {
@@ -93,7 +96,7 @@
       unfold1()
     } else {
       c=s
-      setTimeout(refold1, TD/2)
+      setTimeout(refold1, TD)
     }
   }
 
@@ -126,14 +129,21 @@
       refold1();
     } else {
       newxy = rotate(segments[0][1], [0,0])
+      sameAngle =Math.abs(newxy[1]) === Math.abs(totals[0][0][1] - totals[0][1][1])
+      if (!(NUM_STEPS % 2)) {
+        c=c.append("g")
+        totals[0][0] = rotate(totals[0][0], totals[0][1])
+        rotatePt = [segments[0][1][0]/2, segments[0][1][1]/2]
+        a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
+        w = function() {return d3.interpolateString(a,b)}
+        c.transition().duration(TD).attrTween("transform", w)
+        c.node().appendChild(d3.select("path").node())
+      }
+
       function f() {setup(newxy)}
-      d = d3.svg.line()([totals[0][0], totals[0][0]])
-      d3.select("path").transition().duration(TD).attr("d", d)
-      effectZoom([[0,0]])
-      debugger;
-      setTimeout(f, TD)
+      setTimeout(function f() {setup(newxy)}, TD)
     }
   }
-  setup([0,10])
+  setup([0,10], true)
   </script>
 </body>
