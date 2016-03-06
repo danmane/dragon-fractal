@@ -12,7 +12,7 @@
   <script>
   r=d3.select("svg").node().getBoundingClientRect()
   outerWidth=r.width, outerHeight = r.height;
-  step=0, TRANSITION_DURATION=100, ds=1.1, NUM_STEPS=14;
+  step=0, TRANSITION_DURATION=1000, ds=1.1, NUM_STEPS=9;
   STARTING_RATIO = 4;
   x=0, y=10
   s = d3.select("svg").append("g")
@@ -29,6 +29,11 @@
     var yt = (outerHeight - innerHeight * ratio)/(2*ratio)
     xform = "scale("+[ratio,ratio]+") translate(" + [-minx+xt,-miny+yt] + ")"
     return xform
+  }
+
+  function effectZoom(seq) {
+    var xform = computeTransform(seq)
+    s.transition().duration(TRANSITION_DURATION).attr("transform", xform)
   }
 
   function rotate(vec, about){
@@ -48,6 +53,8 @@
     var newT = last(totals).concat(newS.slice(1))
     totals.push(newT)
   }
+
+
   for (var i=0; i<NUM_STEPS; i++) {extend()}
 
   h=d3.hsl,cs_ = d3.scale.cubehelix().domain([-0.2, 0.5, 1]).range([h(-100, 0.75, 0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])
@@ -59,6 +66,7 @@
 
   function unfold1() {
     step++
+    TRANSITION_DURATION *= 1.1
     rotatePt = last(totals[step-1])
     a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
     w = function() {return d3.interpolateString(a,b)}
@@ -66,7 +74,7 @@
     g=d3.select(s.node().appendChild(clone))
     g.selectAll("path").transition().duration(TRANSITION_DURATION).style("stroke", cs(step))
     g.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
-    s.transition().duration(TRANSITION_DURATION).attr("transform", computeTransform(totals[step]))
+    effectZoom(totals[step])
     setTimeout(unfold2, TRANSITION_DURATION);
       // if (next) {next.remove()} else {d*=15}
       // children = o.node().children, next = children[children.length-1]
@@ -87,28 +95,45 @@
     if (step < NUM_STEPS) {
       unfold1()
     } else {
-      TRANSITION_DURATION = 3000
       c=s
+      then_debug = false
       refold1()
+      // TRANSITION_DURATION *= 10
     }
   }
 
   function refold1() {
-    return;
     step--
+    debugger;
+    TRANSITION_DURATION /= 1.1
     children = c.node().children
     c = c.append("g")
-    rotatePt = last(totals[step])
+    rotatePt = last(segments[step])
     a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
     w = function() {return d3.interpolateString(a,b)}
     while (children.length > 2) {c.node().appendChild(children[0])}
-    s.transition().duration(TRANSITION_DURATION).attr("transform", computeTransform(totals[step]))
+    // s.transition().duration(TRANSITION_DURATION).attr("transform", computeTransform(totals[step]))
     c.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
+    effectZoom(unextend())
     setTimeout(refold2, TRANSITION_DURATION)
   }
+
+  function unextend() {
+    var rp = last(totals[step])
+    function r(x) {return rotate(x, (rp))}
+    totals = totals.map(function(s) {
+      return s.map(r)
+    })
+    return totals[step]
+  }
+
   function refold2() {
     children[0].remove()
+    color = cs(step)
+    if (then_debug) {
+    }
     if (step > 0) {
+      then_debug = true
       refold1();
     }
   }
