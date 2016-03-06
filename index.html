@@ -10,13 +10,13 @@
   </style>
   <svg></svg>
   <script>
-  r=d3.select("svg").node().getBoundingClientRect()
-  outerWidth=r.width, outerHeight = r.height;
-  TRANSITION_DURATION=1000, ds=1.1, NUM_STEPS=5;
+  TD=2000, TS=1.15, NUM_STEPS=14;
   STARTING_RATIO = 4;
   s=null
 
   function computeTransform(seq) {
+    r=d3.select("svg").node().getBoundingClientRect()
+    outerWidth=r.width, outerHeight = r.height;
     var xs=seq.map(function(x){return x[0]}),ys=seq.map(function(x){return x[1]})
     var minx = d3.min(xs), maxx = d3.max(xs), miny = d3.min(ys), maxy = d3.max(ys)
     var innerWidth = (maxx - minx)
@@ -32,7 +32,7 @@
 
   function effectZoom(seq) {
     var xform = computeTransform(seq)
-    s.transition().duration(TRANSITION_DURATION).attr("transform", xform)
+    s.transition().duration(TD).attr("transform", xform)
   }
 
   function rotate(vec, about){
@@ -52,9 +52,9 @@
     totals = segments.slice()
     s.attr("transform", computeTransform(totals[0]))
     p = s.append("path").style("stroke", cs(0)).attr("d", "M0,0 L0,0")
-    p = first ? p.transition().duration(TRANSITION_DURATION) : p
+    p = first ? p.transition().duration(TD) : p
     p.attr("d", d3.svg.line()(totals[0]))
-    setTimeout(unfold1, TRANSITION_DURATION);
+    setTimeout(unfold1, TD);
   }
 
 
@@ -73,16 +73,16 @@
   function unfold1() {
     step++
     extend()
-    TRANSITION_DURATION *= 1.1
+    TD *= TS
     rotatePt = last(totals[step-1])
     a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
     w = function() {return d3.interpolateString(a,b)}
     clone = s.node().cloneNode(true)
     g=d3.select(s.node().appendChild(clone))
-    g.selectAll("path").transition().duration(TRANSITION_DURATION).style("stroke", cs(step))
-    g.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
+    g.selectAll("path").transition().duration(TD).style("stroke", cs(step))
+    g.transition().duration(TD).attrTween("transform", w)
     effectZoom(totals[step])
-    setTimeout(unfold2, TRANSITION_DURATION);
+    setTimeout(unfold2, TD);
   }
 
   function unfold2() {
@@ -93,22 +93,22 @@
       unfold1()
     } else {
       c=s
-      refold1()
+      setTimeout(refold1, TD*2)
     }
   }
 
   function refold1() {
     step--
-    TRANSITION_DURATION /= 1.1
+    TD /= TS
     children = c.node().children
     c = c.append("g")
     rotatePt = last(segments[step])
     a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
     w = function() {return d3.interpolateString(a,b)}
     while (children.length > 2) {c.node().appendChild(children[0])}
-    c.transition().duration(TRANSITION_DURATION).attrTween("transform", w)
+    c.transition().duration(TD).attrTween("transform", w)
     effectZoom(unextend())
-    setTimeout(refold2, TRANSITION_DURATION)
+    setTimeout(refold2, TD)
   }
 
   function unextend() {
@@ -126,7 +126,7 @@
       refold1();
     } else {
       function f() {setup(rotate(segments[0][1], [0,0]))}
-      setTimeout(f, TRANSITION_DURATION)
+      setTimeout(f, TD)
     }
   }
   setup([0,10], true)
