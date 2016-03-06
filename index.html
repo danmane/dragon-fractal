@@ -30,16 +30,9 @@
     return xform
   }
 
-  function effectZoom(seq) {
-    var xform = computeTransform(seq)
-    s.transition().duration(TD).attr("transform", xform)
-  }
-
-  function rotate(vec, about){
-    var x = vec[0]-about[0]
-    var y = vec[1]-about[1]
-    return [about[0] - y, about[1] + x]
-  }
+  function tr(g) {return g.transition().duration(TD);}
+  function effectZoom(seq) { tr(s).attr("transform", computeTransform(seq)) }
+  function rotate(v, a){return [a[0] - v[1] + a[1], a[1] + v[0] - a[0]];}
   function last(x) {return x[x.length-1]}
 
   function setup(xy, start) {
@@ -51,8 +44,7 @@
     s.attr("transform", computeTransform(segments[0]))
     p = s.append("path").style("stroke", cs(0)).attr("d", "M0,0 L0,0")
     function cont() {
-      p = start ? p.transition().duration(TD) : p;
-      p.attr("d", d3.svg.line()(totals[0]))
+      (start ? tr(p) : p).attr("d", d3.svg.line()(totals[0]))
       setTimeout(unfold1, TD*STAGE_MARGIN);
     }
     start ? d3.select("svg").node().onclick=cont : cont()
@@ -69,12 +61,11 @@
   function cs(x) {return cs_(x/(NUM_STEPS+1))}
 
   function unfold1() {
-    step++
+    step++; TD *= TS
     extend()
-    TD *= TS
     clone = s.node().cloneNode(true)
     g=d3.select(s.node().appendChild(clone))
-    g.selectAll("path").transition().duration(TD).style("stroke", cs(step))
+    tr(g.selectAll("path")).style("stroke", cs(step))
     doRotate(last(totals[step-1]), g)
     effectZoom(totals[step])
     setTimeout(unfold2, TD*STAGE_MARGIN);
@@ -95,14 +86,11 @@
   function doRotate(rotatePt,g) {
     a = "rotate(0 " + rotatePt + ")", b = "rotate(90 " + rotatePt + ")"
     w = function() {return d3.interpolateString(a,b)}
-    g.transition().duration(TD).attrTween("transform", w)
+    tr(g).attrTween("transform", w)
   }
 
   function refold1() {
-    step--
-    TD /= TS
-    children = c.node().children
-    c = c.append("g")
+    step--, TD /= TS, children = c.node().children, c = c.append("g")
     doRotate(last(segments[step]), c)
     while (children.length > 2) {c.node().appendChild(children[0])}
     effectZoom(unextend())
@@ -110,8 +98,7 @@
   }
 
   function unextend() {
-    var rp = last(totals[step])
-    function r(x) {return rotate(x, (rp))}
+    function r(x) {return rotate(x, last(totals[step]))}
     totals = totals.map(function(s) {
       return s.map(r)
     })
