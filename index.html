@@ -8,9 +8,10 @@
     path {stroke-width: 1.5px; stroke-linecap: round; fill: none;}
     body {margin: 0px;}
   </style>
+
   <svg></svg>
   <script>
-  TD=2000, TS=1.15, NUM_STEPS=14;
+  TD=500, TS=1.15, NUM_STEPS=2;
   STARTING_RATIO = 4;
   s=null
 
@@ -44,16 +45,15 @@
 
 
 
-  function setup(xy,first) {
+  function setup(xy) {
     step = 0
     if (s) s.remove()
     s = d3.select("svg").append("g")
     segments = [[[0,0], xy]]
     totals = segments.slice()
-    s.attr("transform", computeTransform(totals[0]))
+    s.attr("transform", computeTransform([[0,0]]))
     p = s.append("path").style("stroke", cs(0)).attr("d", "M0,0 L0,0")
-    p = first ? p.transition().duration(TD) : p
-    p.attr("d", d3.svg.line()(totals[0]))
+    p.transition().duration(TD).attr("d", d3.svg.line()(totals[0]))
     setTimeout(unfold1, TD);
   }
 
@@ -88,12 +88,12 @@
   function unfold2() {
     pathd = d3.svg.line()(segments[step])
     clone.remove()
-    s.append("path").attr("d", pathd).style("stroke", cs(step))
+    s.append("path").attr("d", pathd).style("stroke", cs(step)).classed(step, true)
     if (step < NUM_STEPS) {
       unfold1()
     } else {
       c=s
-      setTimeout(refold1, TD*2)
+      setTimeout(refold1, TD/2)
     }
   }
 
@@ -125,10 +125,15 @@
     if (step > 0) {
       refold1();
     } else {
-      function f() {setup(rotate(segments[0][1], [0,0]))}
+      newxy = rotate(segments[0][1], [0,0])
+      function f() {setup(newxy)}
+      d = d3.svg.line()([totals[0][0], totals[0][0]])
+      d3.select("path").transition().duration(TD).attr("d", d)
+      effectZoom([[0,0]])
+      debugger;
       setTimeout(f, TD)
     }
   }
-  setup([0,10], true)
+  setup([0,10])
   </script>
 </body>
