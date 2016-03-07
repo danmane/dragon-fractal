@@ -5,7 +5,7 @@
   body {margin: 0px; cursor: none;}
 </style>
 <script>
-TD=200, TS=1.15, N_STEPS=4, STAGE_MARGIN = 1.3, SR = 4, s=null, mg=50;
+TD=2500, TS=1.15, N_STEPS=14, STAGE_MARGIN = 1.3, SR = 4, s=null, mg=50;
 tf="transform", ds = d3.select; s=ds("html").append("svg").append("g")
 h=d3.hsl, cs = (x) => d3.scale.cubehelix().domain([-0.2, 0.5, 1])
   .range([h(-100,0.75,0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])(x/(N_STEPS+1))
