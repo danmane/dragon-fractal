@@ -4,57 +4,51 @@
   path {stroke-width: 1.5px; stroke-linecap: round; fill: none;}
   body {margin: 0px; cursor: none;}
 </style>
-<svg></svg>
 <script>
 TD=200, TS=1.15, N_STEPS=4, STAGE_MARGIN = 1.3, SR = 4, s=null, mg=50;
-tf="transform"
+tf="transform", ds = d3.select; s=ds("html").append("svg").append("g")
 h=d3.hsl, cs = (x) => d3.scale.cubehelix().domain([-0.2, 0.5, 1])
   .range([h(-100,0.75,0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])(x/(N_STEPS+1))
 function cT(seq) {
-  r=d3.select("svg").node().getBoundingClientRect()
+  r=ds("svg").node().getBoundingClientRect()
   var xr = d3.extent(seq, (x) => x[0]), yr = d3.extent(seq, (x) => x[1])
   var wo=r.width, ho = r.height, wi = xr[1]-xr[0], hi = yr[1]-yr[0];
   var r = Math.min(wo/(wi+2*mg), ho/(hi+2*mg), SR);
   var xt = (wo - wi * r)/(2*r), yt = (ho - hi * r)/(2*r);
-  xform = "scale("+[r,r]+") translate("+[-xr[0]+xt,-yr[0]+yt]+")"
-  return xform
+  return "scale("+[r,r]+") translate("+[-xr[0]+xt,-yr[0]+yt]+")"
 }
 tr = (g) => g.transition().duration(TD);
-effectZoom = (se) => tr(d3.select(s)).attr(tf, cT(se))
+effectZoom = (se) => tr(ds(s)).attr(tf, cT(se))
 rotate = (v,a) => [a[0] - v[1] + a[1], a[1] + v[0] - a[0]];
 lt = (x) => x[x.length-1], rt = (a,r) => "rotate("+ a + " " + r +")"
 dr = (r,g) => tr(g).attrTween(tf, () => d3.interpolateString(rt(0,r),rt(90,r)))
-
 function setup(xy, start) {
   step = 0, segs = [[[0,0], xy]], totals = segs.slice()
-  if (s) s.remove()
-  s = d3.select("svg").append("g").attr(tf, cT(segs[0])).node()
-  p = d3.select(s).append("path").style("stroke", cs(0)).attr("d", "M0,0 L0,0")
+  s.remove()
+  s = ds("svg").append("g").attr(tf, cT(segs[0])).node()
+  p = ds(s).append("path").style("stroke", cs(0)).attr("d", "M0,0 L0,0")
   function cont() {
-    d3.select("svg").node().onclick = null;
+    ds("svg").node().onclick = null;
     (start ? tr(p) : p).attr("d", d3.svg.line()(totals[0]))
     setTimeout(unfold, TD*STAGE_MARGIN);
   }
-  start ? d3.select("svg").node().onclick=cont : cont()
+  start ? ds("svg").node().onclick=cont : cont()
 }
-
 function unfold() {
-  step++, TD *= TS, c=d3.select(s);
+  step++, TD *= TS, c=ds(s);
   segs.push(lt(totals).map((x) => rotate(x, lt(lt(totals)))).reverse())
   totals.push(lt(totals).concat(lt(segs).slice(1)))
-  clone = s.cloneNode(true)
-  g=d3.select(s.insertBefore(clone, s.children[0]))
+  g=ds(s.insertBefore(s.cloneNode(true), s.children[0]))
   tr(g.selectAll("path")).style("stroke", cs(step))
   dr(lt(totals[step-1]), g)
   effectZoom(totals[step])
   setTimeout(() => {
-    var pd = d3.svg.line()(segs[step])
-    clone.remove()
-    d3.select(s.insertBefore(document.createElementNS(d3.ns.prefix['svg'], 'path'), s.children[0])).attr("d", pd).style("stroke", cs(step))
+    var pd = d3.svg.line()(segs[step]), sch = s.children
+    sch[0].remove(), pth = document.createElementNS(d3.ns.prefix['svg'], 'path')
+    ds(s.insertBefore(pth, sch[0])).attr("d", pd).style("stroke", cs(step))
     step < N_STEPS ? unfold() : setTimeout(refold, TD*(STAGE_MARGIN-1)*2)
   }, TD*STAGE_MARGIN);
 }
-
 function refold() {
   step--, TD /= TS, children = c.node().children, c = c.append("g")
   totals = totals.map((s) => s.map((x) => rotate(x, lt(totals[step]))))
@@ -62,13 +56,11 @@ function refold() {
   while (children.length > 2) {c.node().appendChild(children[1])}
   setTimeout(() => {
     children[0].remove()
-    if (step > 0) {
-      refold()
-    } else {
+    if (step > 0) { refold(); } else {
       newxy = rotate(segs[0][1], [0,0])
       if (!(N_STEPS % 2)) {
         dr([segs[0][1][0]/2, segs[0][1][1]/2], c=c.append("g"))
-        c.node().appendChild(d3.select("path").node())
+        c.node().appendChild(ds("path").node())
       }
       setTimeout(function f() {setup(newxy)}, TD)
     }
