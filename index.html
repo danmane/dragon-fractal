@@ -23,8 +23,7 @@ rotate = (v,a) => [a[0] - v[1] + a[1], a[1] + v[0] - a[0]];
 lt = (x) => x[x.length-1], rt = (a,r) => "rotate("+ a + " " + r +")"
 dr = (r,g) => tr(g).attrTween(tf, () => d3.interpolateString(rt(0,r),rt(90,r)))
 function setup(xy, start) {
-  step = 0, segs = [[[0,0], xy]], totals = segs.slice()
-  s.remove()
+  step = 0, segs = [[[0,0], xy]], totals = segs.slice(), s.remove()
   s = ds("svg").append("g").attr(tf, cT(segs[0])).node()
   p = ds(s).append("path").style("stroke", cs(0)).attr("d", "M0,0 L0,0")
   function cont() {
