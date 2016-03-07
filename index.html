@@ -6,7 +6,7 @@
 </style>
 <svg></svg>
 <script>
-TD=200, TS=1.15, N_STEPS=14, STAGE_MARGIN = 1.3, SR = 4, s=null, mg=50;
+TD=2000, TS=1.15, N_STEPS=4, STAGE_MARGIN = 1.3, SR = 4, s=null, mg=50;
 tf="transform"
 h=d3.hsl, cs = (x) => d3.scale.cubehelix().domain([-0.2, 0.5, 1])
   .range([h(-100,0.75,0.35),h(80,1.50,0.80),h(260, 0.75, 0.35)])(x/(N_STEPS+1))
@@ -20,16 +20,16 @@ function cT(seq) {
   return xform
 }
 tr = (g) => g.transition().duration(TD);
-effectZoom = (se) => tr(s).attr(tf, cT(se))
+effectZoom = (se) => tr(d3.select(s)).attr(tf, cT(se))
 rotate = (v,a) => [a[0] - v[1] + a[1], a[1] + v[0] - a[0]];
-last = (x) => x[x.length-1], rt = (a,r) => "rotate("+ a + " " + r +")"
+lt = (x) => x[x.length-1], rt = (a,r) => "rotate("+ a + " " + r +")"
 dr = (r,g) => tr(g).attrTween(tf, () => d3.interpolateString(rt(0,r),rt(90,r)))
 
 function setup(xy, start) {
   step = 0, segs = [[[0,0], xy]], totals = segs.slice()
   if (s) s.remove()
-  s = d3.select("svg").append("g").attr(tf, cT(segs[0]))
-  p = s.append("path").style("stroke", cs(0)).attr("d", "M0,0 L0,0")
+  s = d3.select("svg").append("g").attr(tf, cT(segs[0])).node()
+  p = d3.select(s).append("path").style("stroke", cs(0)).attr("d", "M0,0 L0,0")
   function cont() {
     d3.select("svg").node().onclick = null;
     (start ? tr(p) : p).attr("d", d3.svg.line()(totals[0]))
@@ -39,27 +39,27 @@ function setup(xy, start) {
 }
 
 function unfold() {
-  step++, TD *= TS, c=s;
-  segs.push(last(totals).map((x) => rotate(x, last(last(totals)))).reverse())
-  totals.push(last(totals).concat(last(segs).slice(1)))
-  clone = s.node().cloneNode(true)
-  g=d3.select(s.node().insertBefore(clone, s.node().children[0]))
+  step++, TD *= TS, c=d3.select(s);
+  segs.push(lt(totals).map((x) => rotate(x, lt(lt(totals)))).reverse())
+  totals.push(lt(totals).concat(lt(segs).slice(1)))
+  clone = s.cloneNode(true)
+  g=d3.select(s.insertBefore(clone, s.children[0]))
   tr(g.selectAll("path")).style("stroke", cs(step))
-  dr(last(totals[step-1]), g)
+  dr(lt(totals[step-1]), g)
   effectZoom(totals[step])
   setTimeout(() => {
     var pd = d3.svg.line()(segs[step])
     clone.remove()
-    d3.select(s.node().insertBefore(document.createElementNS(d3.ns.prefix['svg'], 'path'), s.node().children[0])).attr("d", pd).style("stroke", cs(step))
+    d3.select(s.insertBefore(document.createElementNS(d3.ns.prefix['svg'], 'path'), s.children[0])).attr("d", pd).style("stroke", cs(step))
     step < N_STEPS ? unfold() : setTimeout(refold, TD*(STAGE_MARGIN-1)*2)
   }, TD*STAGE_MARGIN);
 }
 
 function refold() {
   step--, TD /= TS, children = c.node().children, c = c.append("g")
-  dr(last(segs[step]), c); effectZoom(totals[step]);
+  dr(lt(segs[step]), c); effectZoom(totals[step]);
   while (children.length > 2) {c.node().appendChild(children[1])}
-  totals = totals.map((s) => s.map((x) => rotate(x, last(totals[step]))))
+  totals = totals.map((s) => s.map((x) => rotate(x, lt(totals[step]))))
   setTimeout(() => {
     children[0].remove()
     if (step > 0) {
